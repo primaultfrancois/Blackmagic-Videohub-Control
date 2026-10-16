@@ -1,0 +1,57 @@
+name: Release
+
+# Push a tag such as v7.0.6 to publish both versions as a GitHub release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: WebKitGTK headers
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libwebkit2gtk-4.1-dev
+
+      - name: Test
+        run: |
+          go test ./...
+          python -m unittest discover -s tests -t .
+
+      - name: Desktop binary (Go)
+        run: |
+          name=videohub-control-${GITHUB_REF_NAME}-linux-amd64
+          mkdir -p dist/$name
+          go build -trimpath -ldflags "-s -w" -o dist/$name/videohub-control ./cmd/videohub-control
+          cp README.md dist/$name/
+          tar -C dist -czf dist/$name.tar.gz $name
+          rm -r dist/$name
+
+      - name: Web version (Python)
+        run: |
+          python -m pip install --upgrade build
+          python -m build --outdir dist .
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<'EOF'
+          Deux versions, même interface :
+
+          - **Application de bureau** : `videohub-control-*-linux-amd64.tar.gz`. Décompressez puis lancez `./videohub-control`.
+            Nécessite WebKitGTK 4.1 (`sudo apt install libwebkit2gtk-4.1-0`, déjà présent sur Ubuntu desktop 24.04+).
+          - **Application web** : `pip install videohub_control-*.whl` puis `python3 -m videohub_control --open`.
+            Python 3.10+, aucune dépendance.
+          EOF
+          gh release create "$GITHUB_REF_NAME" dist/* --title "Videohub Control $GITHUB_REF_NAME" --notes-file notes.md

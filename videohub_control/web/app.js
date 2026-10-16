@@ -34,8 +34,13 @@ function toast(msg, isError = false) {
   setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 300); }, isError ? 5000 : 2500);
 }
 
+// Desktop binary (Go + WebKitGTK) injects window.__vhNative; the browser
+// version talks HTTP to the Python server.
+const native = window.__vhNative || null;
+
 async function api(path, body = {}) {
   try {
+    if (native) return await native.call(path, body);
     const res = await fetch("/api/" + path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -63,6 +68,7 @@ const ic = (name, cls = "ic") => `<svg class="${cls}"><use href="#i-${name}"/></
 
 // --- server events ---------------------------------------------------------
 function listen() {
+  if (native) { native.onState = (s) => { S = s; render(); }; return; }
   const es = new EventSource("/api/events");
   es.onmessage = (e) => { S = JSON.parse(e.data); render(); };
   es.onerror = () => {
@@ -632,14 +638,20 @@ function init() {
     } catch { /* toast already shown */ }
     render();
   };
-  $("#labels-export").onclick = () => {
+  $("#labels-export").onclick = async () => {
     const h = hub();
     const lines = ["type,numero,etiquette"];
     for (const [kind, , get] of LABEL_KINDS) get(h).forEach((l, i) => lines.push(`${kind},${i + 1},${csvCell(l)}`));
-    const blob = new Blob([lines.join("\n") + "\n"], { type: "text/csv" });
+    const name = `${(h.friendlyName || "videohub").replace(/[^\w.-]+/g, "_")}-etiquettes.csv`;
+    const content = lines.join("\n") + "\n";
+    if (native) {
+      const r = await api("saveFile", { name, content }).catch(() => null);
+      if (r && r.ok) toast(`Étiquettes exportées vers ${r.path}`);
+      return;
+    }
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${(h.friendlyName || "videohub").replace(/[^\w.-]+/g, "_")}-etiquettes.csv`;
+    a.href = URL.createObjectURL(new Blob([content], { type: "text/csv" }));
+    a.download = name;
     a.click();
     URL.revokeObjectURL(a.href);
   };
@@ -696,7 +708,8 @@ function init() {
   });
 
   setTab("panel");
-  fetch("/api/state").then((r) => r.json()).then((s) => { S = s; render(); }).catch(() => {});
+  (native ? native.call("state") : fetch("/api/state").then((r) => r.json()))
+    .then((s) => { S = s; render(); }).catch(() => {});
   listen();
 }
 

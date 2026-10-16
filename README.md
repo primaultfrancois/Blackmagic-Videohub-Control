@@ -13,7 +13,47 @@ Blackmagic (TCP 9990) et sert une interface dans le navigateur.
 
 </details>
 
-## Lancer
+## Deux versions, même interface
+
+| | Application de bureau | Application web |
+|---|---|---|
+| Langage | Go | Python (aucune dépendance) |
+| Fenêtre | native (GTK + WebKit) | navigateur, tablette incluse |
+| Réseau | aucun serveur, aucun port ouvert | serveur HTTP local (port 8090) |
+| Plusieurs postes | un poste | plusieurs navigateurs, synchronisés |
+
+Les deux utilisent exactement la même interface (`videohub_control/web/`) et le même fichier
+de configuration : favoris et salves sont partagés.
+
+## Télécharger
+
+Sur la page [Releases](https://github.com/primaultfrancois/Blackmagic-Videohub-Control/releases) :
+
+- **Bureau** : `videohub-control-…-linux-amd64.tar.gz`, à décompresser puis `./videohub-control`.
+  Nécessite WebKitGTK 4.1 (`libwebkit2gtk-4.1-0`, déjà présent sur Ubuntu desktop 24.04+).
+- **Web** : `pip install videohub_control-…-py3-none-any.whl` puis `python3 -m videohub_control --open`.
+
+Pour publier une nouvelle version : `git tag v7.0.6 && git push origin v7.0.6`. Le workflow
+GitHub Actions teste, compile les deux versions et crée la release.
+
+## Application de bureau (Go)
+
+Dépendances de compilation (Ubuntu/Debian) :
+
+```sh
+sudo apt install golang-go libwebkit2gtk-4.1-dev
+```
+
+```sh
+go build -o videohub-control ./cmd/videohub-control
+./videohub-control                    # reconnecte le dernier Videohub utilisé
+./videohub-control --hub 10.0.0.50    # connexion directe
+```
+
+Le binaire embarque l'interface. À l'exécution il n'a besoin que de WebKitGTK
+(`libwebkit2gtk-4.1-0`, présent sur les bureaux GNOME/Ubuntu). `--devtools` active l'inspecteur web.
+
+## Application web (Python)
 
 ```sh
 python3 -m videohub_control --open                 # http://localhost:8090
@@ -38,10 +78,12 @@ Python ≥ 3.10. Le dernier Videohub utilisé est reconnecté automatiquement au
 - **Sorties moniteur** (Videohub qui en ont), **découverte réseau** (mDNS), favoris,
   reconnexion automatique, synchronisation temps réel entre plusieurs navigateurs.
 
-Configuration : `~/.config/videohub-control/config.json`.
+Configuration : `~/.config/videohub-control/config.json`, partagée par les deux versions
+(favoris et salves communs).
 
 ## Tests
 
 ```sh
+go test ./...                               # nécessite libwebkit2gtk-4.1-dev pour internal/gui
 python3 -m unittest discover -s tests -t .
 ```
