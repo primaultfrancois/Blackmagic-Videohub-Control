@@ -14,6 +14,6 @@ void vh_eval(const char *js);
 void vh_dispatch(uintptr_t id);               // thread-safe: runs goDispatch(id) on the main thread
 char *vh_save_dialog(const char *suggested);  // returns a path to free with vh_free, or NULL
 void vh_free(void *p);
-int vh_prefers_dark(void);                    // GNOME colour-scheme preference (after vh_init)
+void vh_set_theme(int dark);                  // 1: dark, 0: light (callable before vh_init)
 
 #endif

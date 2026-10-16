@@ -1,7 +1,6 @@
 #include <gtk/gtk.h>
 #include <webkit2/webkit2.h>
 
-#include <string.h>
 
 #include "webview.h"
 #include "_cgo_export.h"
@@ -33,60 +32,26 @@ static gboolean on_decide_policy(WebKitWebView *v, WebKitPolicyDecision *decisio
     return FALSE;
 }
 
-// WebKitGTK derives prefers-color-scheme from GTK settings, which don't follow
-// GNOME's color-scheme preference: mirror it (and live changes) ourselves.
-static gboolean system_prefers_dark(GSettings *gnome) {
-    gboolean dark = FALSE;
-    if (gnome) {
-        char *scheme = g_settings_get_string(gnome, "color-scheme");
-        dark = g_strcmp0(scheme, "prefer-dark") == 0;
-        g_free(scheme);
-    }
-    if (!dark) {
-        char *theme = NULL;
-        g_object_get(gtk_settings_get_default(), "gtk-theme-name", &theme, NULL);
-        if (theme) {
-            char *lower = g_ascii_strdown(theme, -1);
-            dark = g_str_has_suffix(lower, "-dark") || strstr(lower, "-dark-") != NULL;
-            g_free(lower);
-            g_free(theme);
-        }
-    }
-    return dark;
-}
+// The app has its own light/dark toggle (dark by default), independent of
+// GNOME: the GTK title bar and the page's <html data-theme> both follow it.
+static gboolean dark_theme = TRUE;
 
-static GSettings *gnome;
-
-static void apply_color_scheme(GSettings *gnome) {
-    gboolean dark = system_prefers_dark(gnome);
-    g_object_set(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", dark, NULL);
+static void apply_color_scheme(void) {
+    g_object_set(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", dark_theme, NULL);
     if (view) {
         // Matches the app's background so there's no flash while loading.
-        GdkRGBA bg = dark ? (GdkRGBA){0.051, 0.055, 0.063, 1.0} : (GdkRGBA){0.914, 0.922, 0.937, 1.0};
+        GdkRGBA bg = dark_theme ? (GdkRGBA){0.051, 0.055, 0.063, 1.0} : (GdkRGBA){0.914, 0.922, 0.937, 1.0};
         webkit_web_view_set_background_color(view, &bg);
-        // The page's CSS keys off <html data-theme>, set here for live changes.
         webkit_web_view_evaluate_javascript(view,
-            dark ? "document.documentElement.dataset.theme='dark'" : "document.documentElement.dataset.theme='light'",
+            dark_theme ? "document.documentElement.dataset.theme='dark'" : "document.documentElement.dataset.theme='light'",
             -1, NULL, NULL, NULL, NULL, NULL);
     }
 }
 
-int vh_prefers_dark(void) { return system_prefers_dark(gnome); }
-
-static void on_color_scheme_changed(GSettings *gnome, const char *key, gpointer data) {
-    apply_color_scheme(gnome);
-}
-
-static GSettings *gnome_interface_settings(void) {
-    GSettingsSchemaSource *source = g_settings_schema_source_get_default();
-    GSettingsSchema *schema = source ? g_settings_schema_source_lookup(source, "org.gnome.desktop.interface", TRUE) : NULL;
-    GSettings *settings = NULL;
-    if (schema) {
-        if (g_settings_schema_has_key(schema, "color-scheme"))
-            settings = g_settings_new("org.gnome.desktop.interface");
-        g_settings_schema_unref(schema);
-    }
-    return settings;
+void vh_set_theme(int dark) {
+    dark_theme = dark != 0;
+    if (window)
+        apply_color_scheme();
 }
 
 static void set_icon(const void *data, int len) {
@@ -131,10 +96,7 @@ void vh_init(const char *app_id, const char *title, int width, int height, const
     webkit_settings_set_hardware_acceleration_policy(settings, WEBKIT_HARDWARE_ACCELERATION_POLICY_ALWAYS);
     g_signal_connect(view, "decide-policy", G_CALLBACK(on_decide_policy), NULL);
 
-    gnome = gnome_interface_settings();  // kept for the app's lifetime
-    if (gnome)
-        g_signal_connect(gnome, "changed::color-scheme", G_CALLBACK(on_color_scheme_changed), NULL);
-    apply_color_scheme(gnome);
+    apply_color_scheme();
 
     gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
     gtk_widget_show_all(window);

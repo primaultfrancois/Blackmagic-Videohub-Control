@@ -77,7 +77,38 @@ function listen() {
 }
 
 // --- rendering -------------------------------------------------------------
+// --- light / dark theme ----------------------------------------------------
+// Saved in config.json ("theme": "dark" | "light"), dark by default.
+// Cached locally too, so the page doesn't flash the wrong theme before the
+// first snapshot arrives.
+const root = document.documentElement;
+
+function applyTheme(theme) {
+  root.dataset.theme = theme === "light" ? "light" : "dark";
+  const dark = root.dataset.theme === "dark";
+  const btn = $("#theme-btn");
+  btn.innerHTML = ic(dark ? "sun" : "moon");
+  btn.title = dark ? "Passer en mode clair" : "Passer en mode sombre";
+}
+
+applyTheme(pref("theme", "dark"));
+// Follows config.json when it changes (first snapshot, other window…).
+let serverTheme;
+function syncTheme() {
+  if (S.theme === serverTheme) return;
+  serverTheme = S.theme;
+  setPref("theme", S.theme);
+  applyTheme(S.theme);
+}
+$("#theme-btn").addEventListener("click", () => {
+  const theme = root.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(theme);
+  setPref("theme", theme);
+  api("theme", { theme }).catch(() => {});
+});
+
 function render() {
+  syncTheme();
   const c = S.connection;
   const h = hub();
   setStatus(c ? c.status : "disconnected", c ? (c.status === "connected" ? `Connecté à ${c.host}` : c.error || "Connexion…") : "Déconnecté");

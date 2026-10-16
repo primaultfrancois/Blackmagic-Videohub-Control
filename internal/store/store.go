@@ -32,6 +32,7 @@ type data struct {
 	Hubs    []Hub              `json:"hubs"`
 	Salvos  map[string][]Salvo `json:"salvos"`
 	LastHub *LastHub           `json:"lastHub"`
+	Theme   string             `json:"theme,omitempty"` // "dark" (default) or "light"
 }
 
 type Store struct {
@@ -136,6 +137,24 @@ func (s *Store) SetLastHub(host string, port int) error {
 	} else {
 		s.d.LastHub = &LastHub{host, port}
 	}
+	return s.save()
+}
+
+// --- theme -----------------------------------------------------------------
+
+func (s *Store) Theme() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.d.Theme == "light" {
+		return "light"
+	}
+	return "dark"
+}
+
+func (s *Store) SetTheme(theme string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.d.Theme = theme
 	return s.save()
 }
 

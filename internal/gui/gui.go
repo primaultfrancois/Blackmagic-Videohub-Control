@@ -39,8 +39,21 @@ type Options struct {
 	HTML      string
 	BridgeJS  string       // injected before the page's own scripts
 	DevTools  bool         // right-click → Inspect
+	Theme     string       // "dark" or "light"
 	OnMessage func(string) // called on the main thread for each postMessage
 }
+
+func setTheme(theme string) {
+	if theme == "light" {
+		C.vh_set_theme(0)
+	} else {
+		C.vh_set_theme(1)
+	}
+}
+
+// SetTheme sets the window's colour scheme ("dark" or "light"). Safe to call
+// from any goroutine.
+func SetTheme(theme string) { Dispatch(func() { setTheme(theme) }) }
 
 // Run opens the window and blocks until it is closed. Call from main().
 func Run(o Options) {
@@ -58,11 +71,12 @@ func Run(o Options) {
 	if o.DevTools {
 		dev = 1
 	}
+	setTheme(o.Theme)
 	C.vh_init(appID, title, C.int(o.Width), C.int(o.Height), bridge, dev, icon, C.int(len(o.Icon)))
 
-	theme := "light"
-	if C.vh_prefers_dark() != 0 {
-		theme = "dark"
+	theme := "dark"
+	if o.Theme == "light" {
+		theme = "light"
 	}
 	page := strings.Replace(o.HTML, "<html ", `<html data-theme="`+theme+`" `, 1)
 	html, base := C.CString(page), C.CString("http://videohub-control.localhost/")

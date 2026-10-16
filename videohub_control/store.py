@@ -53,6 +53,15 @@ class Store:
             self.data["lastHub"] = {"host": host, "port": port} if host else None
             self._save()
 
+    # --- theme: "dark" (default) or "light" ---------------------------------
+    def theme(self) -> str:
+        return "light" if self.data.get("theme") == "light" else "dark"
+
+    def set_theme(self, theme: str) -> None:
+        with self._lock:
+            self.data["theme"] = theme
+            self._save()
+
     # --- salvos (keyed by hub unique ID so they follow the device) ---------
     def salvos(self, hub_key: str) -> list[dict]:
         return list(self.data["salvos"].get(hub_key, []))

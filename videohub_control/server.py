@@ -60,6 +60,7 @@ class Controller:
             "hubs": self.store.hubs(),
             "salvos": self.store.salvos(key) if key else [],
             "discovered": self.discovered,
+            "theme": self.store.theme(),
         }
 
     def require_client(self) -> VideohubClient:
@@ -244,6 +245,12 @@ class Handler(BaseHTTPRequestHandler):
                 ctl.bump()
             elif path == "/api/hubs/delete":
                 ctl.store.delete_hub(str(body.get("host", "")), int(body.get("port") or DEFAULT_PORT))
+                ctl.bump()
+            elif path == "/api/theme":
+                theme = str(body.get("theme") or "")
+                if theme not in ("dark", "light"):
+                    raise ApiError(f"Thème inconnu : {theme}")
+                ctl.store.set_theme(theme)
                 ctl.bump()
             elif path == "/api/salvos/save":
                 ctl.save_salvo(body.get("name", ""), body.get("outputs") or {})

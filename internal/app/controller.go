@@ -31,6 +31,7 @@ type Snapshot struct {
 	Hubs       []store.Hub            `json:"hubs"`
 	Salvos     []store.Salvo          `json:"salvos"`
 	Discovered []discovery.Device     `json:"discovered"`
+	Theme      string                 `json:"theme"`
 }
 
 type Controller struct {
@@ -71,7 +72,7 @@ func (c *Controller) Snapshot() Snapshot {
 	c.mu.Lock()
 	cl, disc, ver := c.client, c.discovered, c.version
 	c.mu.Unlock()
-	s := Snapshot{Version: ver, Hubs: c.Store.Hubs(), Salvos: []store.Salvo{}, Discovered: disc}
+	s := Snapshot{Version: ver, Hubs: c.Store.Hubs(), Salvos: []store.Salvo{}, Discovered: disc, Theme: c.Store.Theme()}
 	if cl != nil {
 		conn := cl.Snapshot()
 		s.Connection = &conn
@@ -164,6 +165,7 @@ type request struct {
 	Labels  pairList                   `json:"labels"`
 	Locks   pairList                   `json:"locks"`
 	Outputs map[string]json.RawMessage `json:"outputs"`
+	Theme   string                     `json:"theme"`
 }
 
 // Handle runs one UI action. Errors are *UserError or *videohub.CommandError,
@@ -234,6 +236,13 @@ func (c *Controller) Handle(path string, body []byte) (any, error) {
 		return ok, err
 	case "hubs/delete":
 		err := c.Store.DeleteHub(req.Host, req.Port)
+		c.bump()
+		return ok, err
+	case "theme":
+		if req.Theme != "dark" && req.Theme != "light" {
+			return nil, userErr("Thème inconnu : %s", req.Theme)
+		}
+		err := c.Store.SetTheme(req.Theme)
 		c.bump()
 		return ok, err
 	case "salvos/save":

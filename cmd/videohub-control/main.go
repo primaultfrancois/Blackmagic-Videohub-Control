@@ -149,6 +149,7 @@ func main() {
 		HTML:     webui.Page(),
 		BridgeJS: bridgeJS,
 		DevTools: *devtools,
+		Theme:    ctl.Store.Theme(),
 		OnMessage: func(raw string) {
 			var m message
 			if json.Unmarshal([]byte(raw), &m) != nil {
@@ -160,6 +161,9 @@ func main() {
 			}
 			go func() {
 				result, err := ctl.Handle(m.Path, m.Body)
+				if m.Path == "theme" && err == nil {
+					gui.SetTheme(ctl.Store.Theme()) // GTK title bar follows too
+				}
 				reply(m.ID, result, err)
 			}()
 		},

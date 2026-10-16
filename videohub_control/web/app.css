@@ -43,35 +43,7 @@
   -webkit-font-smoothing: antialiased;
 }
 
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    color-scheme: light;
-    --bg: #e9ebef;
-    --chassis: #f3f4f7;
-    --panel: #ffffff;
-    --panel-2: #f6f7f9;
-    --raised: #eceef2;
-    --line: rgba(15, 20, 30, 0.08);
-    --line-strong: rgba(15, 20, 30, 0.14);
-    --text: #16181c;
-    --muted: #626873;
-    --faint: #9aa0a8;
-    --key-top: #ffffff;
-    --key-bot: #eef0f3;
-    --key-text: #23262b;
-    --accent: #f59e0b;
-    --accent-2: #ea8a00;
-    --accent-soft: rgba(245, 158, 11, 0.14);
-    --accent-glow: rgba(245, 158, 11, 0.35);
-    --lit: #1d2025;
-    --lit-top: #34373d;
-    --lit-bot: #1d2025;
-    --lit-text: #ffffff;
-    --lit-glow: rgba(0, 0, 0, 0.3);
-  }
-}
-
-/* Forced by the desktop app, which knows the real GNOME preference. */
+/* Light theme, chosen with the toggle in the top bar (dark is the default). */
 :root[data-theme="light"] {
   color-scheme: light;
   --bg: #e9ebef;
@@ -173,6 +145,9 @@ button, input { font: inherit; color: inherit; }
 .btn.subtle { background: var(--panel-2); border-color: var(--line); color: var(--muted); height: 34px; font-size: 12.5px; }
 .btn.subtle:hover:not(:disabled) { color: var(--text); background: var(--raised); }
 .btn.wide { width: 100%; }
+.btn.theme-btn { width: 36px; padding: 0; color: var(--muted); }
+.btn.theme-btn:hover { color: var(--text); }
+.btn.theme-btn .ic { width: 18px; height: 18px; }
 .btn.danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
 .btn.subtle.busy .ic { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
