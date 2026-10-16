@@ -14,6 +14,12 @@ var (
 	appCSS string
 	//go:embed videohub_control/web/app.js
 	appJS string
+
+	// Icon is the application icon (dock, window, launcher): the in-app logo
+	// (.logo in app.css) rendered at 256 px as PNG, the format GNOME Shell
+	// handles most reliably.
+	//go:embed packaging/videohub-control.png
+	Icon []byte
 )
 
 // Page returns index.html with the stylesheet and script inlined, ready to

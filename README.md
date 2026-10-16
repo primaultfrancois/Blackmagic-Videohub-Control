@@ -50,6 +50,10 @@ go build -o videohub-control ./cmd/videohub-control
 ./videohub-control --hub 10.0.0.50    # connexion directe
 ```
 
+Rien à installer : au premier lancement, le binaire s'ajoute de lui-même au menu des
+applications avec son icône (et se met à jour s'il est déplacé). Pour le garder dans le dock :
+clic droit sur l'icône → Épingler au dock. `--uninstall-desktop` retire le lanceur.
+
 Le binaire embarque l'interface. À l'exécution il n'a besoin que de WebKitGTK
 (`libwebkit2gtk-4.1-0`, présent sur les bureaux GNOME/Ubuntu). `--devtools` active l'inspecteur web.
 

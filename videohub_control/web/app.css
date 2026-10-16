@@ -71,6 +71,33 @@
   }
 }
 
+/* Forced by the desktop app, which knows the real GNOME preference. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #e9ebef;
+  --chassis: #f3f4f7;
+  --panel: #ffffff;
+  --panel-2: #f6f7f9;
+  --raised: #eceef2;
+  --line: rgba(15, 20, 30, 0.08);
+  --line-strong: rgba(15, 20, 30, 0.14);
+  --text: #16181c;
+  --muted: #626873;
+  --faint: #9aa0a8;
+  --key-top: #ffffff;
+  --key-bot: #eef0f3;
+  --key-text: #23262b;
+  --accent: #f59e0b;
+  --accent-2: #ea8a00;
+  --accent-soft: rgba(245, 158, 11, 0.14);
+  --accent-glow: rgba(245, 158, 11, 0.35);
+  --lit: #1d2025;
+  --lit-top: #34373d;
+  --lit-bot: #1d2025;
+  --lit-text: #ffffff;
+  --lit-glow: rgba(0, 0, 0, 0.3);
+}
+
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; overflow: hidden; }

@@ -14,6 +14,7 @@ import (
 
 	webui "github.com/primaultfrancois/Blackmagic-Videohub-Control"
 	"github.com/primaultfrancois/Blackmagic-Videohub-Control/internal/app"
+	"github.com/primaultfrancois/Blackmagic-Videohub-Control/internal/desktop"
 	"github.com/primaultfrancois/Blackmagic-Videohub-Control/internal/gui"
 	"github.com/primaultfrancois/Blackmagic-Videohub-Control/internal/store"
 )
@@ -86,10 +87,32 @@ func main() {
 	config := flag.String("config", "", "fichier de configuration JSON (défaut ~/.config/videohub-control/config.json)")
 	devtools := flag.Bool("devtools", false, "active l'inspecteur web (clic droit → Inspecter)")
 	showVersion := flag.Bool("version", false, "affiche la version")
+	uninstall := flag.Bool("uninstall-desktop", false, "retire le lanceur et l'icône du menu des applications, puis quitte")
 	flag.Parse()
-	if *showVersion {
+	switch {
+	case *showVersion:
 		fmt.Println("Videohub Control", version)
 		return
+	case *uninstall:
+		if err := desktop.Uninstall(); err != nil {
+			fmt.Fprintln(os.Stderr, "Désinstallation impossible :", err)
+			os.Exit(1)
+		}
+		fmt.Println("Lanceur et icône retirés.")
+		return
+	}
+
+	// Register the launcher + icon so the dock shows the app's own icon.
+	// Nothing to install: this happens on its own, and only writes when needed.
+	// It must happen before the window opens: GNOME binds a window to its
+	// launcher when the window appears, and never revisits that choice.
+	if exe, err := os.Executable(); err == nil {
+		changed, err := desktop.Ensure(exe, webui.Icon)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Intégration au bureau impossible :", err)
+		} else if changed {
+			time.Sleep(time.Second) // first run: let GNOME Shell index the new launcher
+		}
 	}
 
 	ctl := app.New(store.Open(*config))
@@ -118,6 +141,8 @@ func main() {
 	}
 
 	gui.Run(gui.Options{
+		AppID:    desktop.AppID,
+		Icon:     webui.Icon,
 		Title:    "Videohub Control",
 		Width:    1440,
 		Height:   900,

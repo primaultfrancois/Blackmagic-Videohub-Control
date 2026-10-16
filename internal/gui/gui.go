@@ -13,6 +13,7 @@ import "C"
 
 import (
 	"runtime"
+	"strings"
 	"sync"
 	"unsafe"
 )
@@ -30,6 +31,8 @@ var (
 )
 
 type Options struct {
+	AppID     string // Wayland app_id / X11 WM_CLASS, matching the .desktop file
+	Icon      []byte // SVG or PNG
 	Title     string
 	Width     int
 	Height    int
@@ -42,16 +45,27 @@ type Options struct {
 // Run opens the window and blocks until it is closed. Call from main().
 func Run(o Options) {
 	onMessage = o.OnMessage
-	title, bridge := C.CString(o.Title), C.CString(o.BridgeJS)
+	appID, title, bridge := C.CString(o.AppID), C.CString(o.Title), C.CString(o.BridgeJS)
+	defer C.free(unsafe.Pointer(appID))
 	defer C.free(unsafe.Pointer(title))
 	defer C.free(unsafe.Pointer(bridge))
+	var icon unsafe.Pointer
+	if len(o.Icon) > 0 {
+		icon = C.CBytes(o.Icon)
+		defer C.free(icon)
+	}
 	dev := C.int(0)
 	if o.DevTools {
 		dev = 1
 	}
-	C.vh_init(title, C.int(o.Width), C.int(o.Height), bridge, dev)
+	C.vh_init(appID, title, C.int(o.Width), C.int(o.Height), bridge, dev, icon, C.int(len(o.Icon)))
 
-	html, base := C.CString(o.HTML), C.CString("http://videohub-control.localhost/")
+	theme := "light"
+	if C.vh_prefers_dark() != 0 {
+		theme = "dark"
+	}
+	page := strings.Replace(o.HTML, "<html ", `<html data-theme="`+theme+`" `, 1)
+	html, base := C.CString(page), C.CString("http://videohub-control.localhost/")
 	C.vh_load_html(html, base)
 	C.free(unsafe.Pointer(html))
 	C.free(unsafe.Pointer(base))
