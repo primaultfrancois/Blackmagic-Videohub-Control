@@ -1,4 +1,4 @@
-# Videohub Control 7.0.6 (Linux)
+# Videohub Control (Linux)
 
 Recréation de **Blackmagic Videohub Control 7.0.6** sous forme d'application web locale :
 un petit serveur Python (aucune dépendance) parle au Videohub via le protocole Ethernet
@@ -33,7 +33,7 @@ Sur la page [Releases](https://github.com/primaultfrancois/Blackmagic-Videohub-C
   Nécessite WebKitGTK 4.1 (`libwebkit2gtk-4.1-0`, déjà présent sur Ubuntu desktop 24.04+).
 - **Web** : `pip install videohub_control-…-py3-none-any.whl` puis `python3 -m videohub_control --open`.
 
-Pour publier une nouvelle version : `git tag v7.0.6 && git push origin v7.0.6`. Le workflow
+Pour publier une nouvelle version : `git tag v1.0.0 && git push origin v1.0.0`. Le workflow
 GitHub Actions teste, compile les deux versions et crée la release.
 
 ## Application de bureau (Go)

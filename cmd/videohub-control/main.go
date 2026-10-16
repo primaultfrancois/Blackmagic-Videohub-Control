@@ -19,7 +19,7 @@ import (
 	"github.com/primaultfrancois/Blackmagic-Videohub-Control/internal/store"
 )
 
-const version = "7.0.6"
+const version = "1.0.0"
 
 // bridgeJS is injected before app.js. It exposes window.__vhNative, which
 // app.js uses instead of fetch()/EventSource when present.

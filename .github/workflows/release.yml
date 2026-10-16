@@ -1,6 +1,6 @@
 name: Release
 
-# Push a tag such as v7.0.6 to publish both versions as a GitHub release.
+# Push a tag such as v1.0.0 to publish both versions as a GitHub release.
 on:
   push:
     tags: ["v*"]
