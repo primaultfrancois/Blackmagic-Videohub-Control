@@ -54,4 +54,9 @@ jobs:
           - **Application web** : `pip install videohub_control-*.whl` puis `python3 -m videohub_control --open`.
             Python 3.10+, aucune dépendance.
           EOF
-          gh release create "$GITHUB_REF_NAME" dist/* --title "Videohub Control $GITHUB_REF_NAME" --notes-file notes.md
+          # A re-pushed tag updates its existing release instead of failing.
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* --title "Videohub Control $GITHUB_REF_NAME" --notes-file notes.md
+          fi
