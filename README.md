@@ -4,6 +4,15 @@ Recréation de **Blackmagic Videohub Control 7.0.6** sous forme d'application we
 un petit serveur Python (aucune dépendance) parle au Videohub via le protocole Ethernet
 Blackmagic (TCP 9990) et sert une interface dans le navigateur.
 
+![Panneau de routage](docs/panneau.png)
+
+<details>
+<summary>Vue matrice</summary>
+
+![Matrice de points de croisement](docs/matrice.png)
+
+</details>
+
 ## Lancer
 
 ```sh
